@@ -1,3 +1,14 @@
+-- Создание таблицы exch_quotes_archive
+CREATE TABLE IF NOT EXISTS exch_quotes_archive
+(
+    exchange_id  INTEGER NOT NULL,
+    bond_id      INTEGER NOT NULL,
+    trading_date DATE    NOT NULL,
+    bid          NUMERIC(10, 2),
+    ask          NUMERIC(10, 2),
+    PRIMARY KEY (exchange_id, bond_id, trading_date)
+);
+
 -- Ф-я для определения является ли input_date выходным днём
 CREATE OR REPLACE FUNCTION is_weekend(input_date DATE)
     RETURNS BOOLEAN AS
@@ -29,23 +40,23 @@ DECLARE
     random_bid           NUMERIC(10, 2);
     random_ask           NUMERIC(10, 2);
 BEGIN
-    -- цикл по диапазону идентификаторов облигаций
+    -- Цикл по диапазону идентификаторов облигаций
     FOR bond_id IN 1..200
     LOOP
 
-        -- исключение одной биржи для данной облигации, опредяем случайным образом
+        -- Исключение одной биржи для данной облигации, опредяем случайным образом
         SELECT ARRAY_REMOVE(exchange_list, exchange_list[CEIL(RANDOM() * ARRAY_LENGTH(exchange_list, 1))])
         INTO edited_exchange_list;
 
-        -- цикл по датам, на период 62 дня в прошлое от переданной даты запуска (initial_date)
+        -- Цикл по датам, на период 62 дня в прошлое от переданной даты запуска (initial_date)
         FOR i IN 0..62
         LOOP
             trading_date := initial_date - MAKE_INTERVAL(days => i);
 
-            -- переходим к следующей итерации, если дата - выходной (СБ или ВС)
+            -- Переходим к следующей итерации, если дата - выходной (СБ или ВС)
             CONTINUE WHEN is_weekend(trading_date);
 
-            -- цикл по идентификаторам бирж
+            -- Цикл по идентификаторам бирж
             FOREACH exchange_id IN ARRAY edited_exchange_list
             LOOP
                 -- Генерируем случайные значения для bid и ask
