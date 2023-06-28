@@ -89,3 +89,29 @@ $BODY$
 
 TRUNCATE exch_quotes_archive;
 SELECT fill_exch_quotes_archive('2023-06-28');
+
+
+-- Task 2. Решение.
+-- full_list - полный список дат, включая выходные дни
+WITH full_list (trading_date, bond_id) AS (
+    WITH dates_list (trading_date) AS (
+            SELECT i::DATE
+            FROM GENERATE_SERIES('2023-06-20'::DATE - INTERVAL '13 days', '2023-06-20'::DATE, '1 day'::INTERVAL) i
+        ),
+        bonds_list (bond_id) AS (SELECT DISTINCT bond_id FROM exch_quotes_archive)
+    SELECT * FROM dates_list CROSS JOIN bonds_list
+    ),
+    -- bond_avg_prices - выборка средних цен (и bid, и ask) от всех бирж по каждой облигации
+    bond_avg_prices AS (
+        SELECT bond_id, trading_date, ROUND(AVG(bid), 2) AS avg_bid, ROUND(AVG(ask), 2) AS avg_ask
+        FROM exch_quotes_archive
+        WHERE trading_date >= '2023-06-20'::DATE - INTERVAL '14 days'
+        GROUP BY bond_id, trading_date
+    )
+SELECT full_list.trading_date, full_list.bond_id, avg_bid, avg_ask
+FROM full_list
+LEFT JOIN bond_avg_prices ON (
+    full_list.trading_date = bond_avg_prices.trading_date
+    AND full_list.bond_id = bond_avg_prices.bond_id
+)
+ORDER BY full_list.trading_date, full_list.bond_id;
