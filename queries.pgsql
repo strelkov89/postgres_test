@@ -1,3 +1,4 @@
+-- Все решения выполнены в PostgreSQL 15.  
 -- Задание 1. Решение.
 -- Создание таблицы exch_quotes_archive
 CREATE TABLE IF NOT EXISTS exch_quotes_archive
@@ -147,8 +148,8 @@ WITH full_list (trading_date, bond_id) AS (
     )
 SELECT full_list.trading_date, full_list.bond_id, avg_bid, avg_ask, roll_avg_bid, roll_avg_ask
 FROM full_list
-         LEFT JOIN bond_avg_prices ON (
-            full_list.trading_date = bond_avg_prices.trading_date
-        AND full_list.bond_id = bond_avg_prices.bond_id
-    )
+LEFT JOIN bond_avg_prices ON (
+    full_list.trading_date = bond_avg_prices.trading_date
+    AND full_list.bond_id = bond_avg_prices.bond_id
+)
 ORDER BY full_list.bond_id, full_list.trading_date;
